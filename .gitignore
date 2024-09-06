@@ -1,6 +1,5 @@
 .venv/
 .vscode/
-*.env
 *.csv
 *.json
 *.tsv
@@ -8,3 +7,4 @@
 *.gz
 *.log
 *.pyc
+.env

@@ -3,13 +3,14 @@ Retrieve config values from the config.yml file in the base project directory,
 and environment variables from either the system or an included .env file.
 """
 
-import os
 import logging
-from pathlib import Path
+import os
 from datetime import datetime
+from pathlib import Path
+
+import utils
 import yaml
 from dotenv import load_dotenv
-import utils
 
 # setup the logger
 logger = logging.getLogger(__name__)
@@ -34,7 +35,12 @@ class Config:
 
     def __init__(
         self,
-        log_retention_period: int
+        log_retention_period: int,
+        email_port: int,
+        email_smtp_server: str,
+        email_sender_email: str,
+        email_password: str,
+        email_receiver_email: str,
     ):
         """
         Initializes the Config object with the given properties.
@@ -42,6 +48,11 @@ class Config:
         :param log_retention_period: How many days to keeps logs for.
         """
         self.log_retention_period = log_retention_period or 30
+        self.email_port = email_port
+        self.email_smtp_server = email_smtp_server
+        self.email_sender_email = email_sender_email
+        self.email_password = email_password
+        self.email_receiver_email = email_receiver_email
 
     def __repr__(self):
         """
@@ -49,6 +60,11 @@ class Config:
         """
         return (
             f"log_retention_period={self.log_retention_period}\n"
+            f"email_port={self.email_port}\n"
+            f"email_smtp_server={self.email_smtp_server}\n"
+            f"email_sender_email={self.email_sender_email}\n"
+            f"email_password={self.email_password}\n"
+            f"email_receiver_email={self.email_receiver_email}\n"
         )
 
 
@@ -97,10 +113,18 @@ def validate_env(env_path: Path) -> dict:
     :return (dict): A dictionary with values from the environment file.
     """
     env = {
-        "my_credential": None,
+        "email_port": None,
+        "email_smtp_port": None,
+        "email_sender_email": None,
+        "email_password": None,
+        "email_receiver_email": None,
     }
 
-    env["my_credential"] = os.environ.get("MY_CREDENTIAL")
+    env["email_port"] = os.environ.get("EMAIL_PORT")
+    env["email_smtp_port"] = os.environ.get("EMAIL_SMTP_SERVER")
+    env["email_sender_email"] = os.environ.get("EMAIL_SENDER_EMAIL")
+    env["email_password"] = os.environ.get("EMAIL_PASSWORD")
+    env["email_receiver_email"] = os.environ.get("EMAIL_RECEIVER_EMAIL")
 
     # if no system environment variables, check file
     if None in env.values():
@@ -119,7 +143,11 @@ def validate_env(env_path: Path) -> dict:
 
         load_dotenv(env_path)
 
-        env["my_credential"] = os.environ.get("MY_CREDENTIAL")
+        env["email_port"] = os.environ.get("EMAIL_PORT")
+        env["email_smtp_port"] = os.environ.get("EMAIL_SMTP_SERVER")
+        env["email_sender_email"] = os.environ.get("EMAIL_SENDER_EMAIL")
+        env["email_password"] = os.environ.get("EMAIL_PASSWORD")
+        env["email_receiver_email"] = os.environ.get("EMAIL_RECEIVER_EMAIL")
 
         if None in env.values():
             logger.error(
@@ -155,7 +183,12 @@ def get_config() -> Config:
     env = validate_env(env_path)
 
     config = Config(
-        log_retention_period=config.get("log_retention_period")
+        log_retention_period=config.get("log_retention_period"),
+        email_port=env.get("email_port"),
+        email_smtp_server=env.get("email_smtp_server"),
+        email_sender_email=env.get("email_sender_email"),
+        email_password=env.get("email_password"),
+        email_receiver_email=env.get("email_receiver_email"),
     )
 
     # clean old logs
@@ -166,4 +199,4 @@ def get_config() -> Config:
 
 if __name__ == "__main__":
     user_config = get_config()
-    print(f"\n-----config.py-----\n{user_config.__repr__}")
+    print(f"\n-----config.py-----\n{repr(user_config)}")
