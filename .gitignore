@@ -1,0 +1,10 @@
+.venv/
+.vscode/
+*.env
+*.csv
+*.json
+*.tsv
+*.parquet
+*.gz
+*.log
+*.pyc
