@@ -30,12 +30,12 @@ def clean_old_logs(log_dir: Path, days: int = 30) -> None:
             logger.info("Deleted old log file: %s", log_file)
 
 
-def send_email(config: config.Config, message: str, exit_status: str = 'Success') -> None:
+def send_email(c_config, message: str, exit_status: str = 'Success') -> None:
     """
     Sends an email upon program completion with a success
     or error message.
 
-    :param1 config (Config): The config which contains email
+    :param1 c_config (Config): The config which contains email
     credential info pulled from the system environment variables or .env file.
     :param2 message (str): The success or error message to send.
     :param3 exit_status (str): The exit status of the application.
@@ -45,26 +45,25 @@ def send_email(config: config.Config, message: str, exit_status: str = 'Success'
 
     # if message is an error, exit_status = 'Error'
 
-    message = f"""\
-    Subject: {cwd.stem} - {exit_status}
-
-    Application Name: {cwd.stem}
-    Timestamp: {datetime.now()}
-    Host: {platform.node()}
-    Directory: {cwd}
-    Operating System: {platform.system()} {platform.release()}
-    Python Version: {platform.python_version()}
-
-    {message}"""
+    message = (
+        f"Subject: {cwd.stem} - {exit_status}"
+        f"Application Name: {cwd.stem}\n"
+        f"       Timestamp: {datetime.now()}\n"
+        f"            Host: {platform.node()}\n"
+        f"       Directory: {cwd}\n"
+        f"Operating System: {platform.system()} {platform.release()}\n"
+        f"  Python Version: {platform.python_version()}\n\n"
+        f"{message}"
+    )
 
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL(
-        config.email_smtp_server, config.email_port, context=context
+        c_config.email_smtp_server, c_config.email_port, context=context
     ) as server:
-        server.login(config.email_sender_email, config.email_password)
+        server.login(c_config.email_sender_email, c_config.email_password)
         server.sendmail(
-            config.email_sender_email,
-            config.email_receiver_email,
+            c_config.email_sender_email,
+            c_config.email_receiver_email,
             message
         )
 

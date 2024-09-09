@@ -114,14 +114,14 @@ def validate_env(env_path: Path) -> dict:
     """
     env = {
         "email_port": None,
-        "email_smtp_port": None,
+        "email_smtp_server": None,
         "email_sender_email": None,
         "email_password": None,
         "email_receiver_email": None,
     }
 
     env["email_port"] = os.environ.get("EMAIL_PORT")
-    env["email_smtp_port"] = os.environ.get("EMAIL_SMTP_SERVER")
+    env["email_smtp_server"] = os.environ.get("EMAIL_SMTP_SERVER")
     env["email_sender_email"] = os.environ.get("EMAIL_SENDER_EMAIL")
     env["email_password"] = os.environ.get("EMAIL_PASSWORD")
     env["email_receiver_email"] = os.environ.get("EMAIL_RECEIVER_EMAIL")
@@ -144,7 +144,7 @@ def validate_env(env_path: Path) -> dict:
         load_dotenv(env_path)
 
         env["email_port"] = os.environ.get("EMAIL_PORT")
-        env["email_smtp_port"] = os.environ.get("EMAIL_SMTP_SERVER")
+        env["email_smtp_server"] = os.environ.get("EMAIL_SMTP_SERVER")
         env["email_sender_email"] = os.environ.get("EMAIL_SENDER_EMAIL")
         env["email_password"] = os.environ.get("EMAIL_PASSWORD")
         env["email_receiver_email"] = os.environ.get("EMAIL_RECEIVER_EMAIL")
