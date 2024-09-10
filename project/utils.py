@@ -30,7 +30,7 @@ def clean_old_logs(log_dir: Path, days: int = 30) -> None:
             logger.info("Deleted old log file: %s", log_file)
 
 
-def send_email(c_config, message: str, exit_status: str = 'Success') -> None:
+def send_email(c_config, message: str, exit_status: str = 'SUCCESS') -> None:
     """
     Sends an email upon program completion with a success
     or error message.
@@ -47,25 +47,32 @@ def send_email(c_config, message: str, exit_status: str = 'Success') -> None:
 
     message = (
         f"Subject: {cwd.stem} - {exit_status}"
+        f"     Exit Status: {exit_status}\n"
         f"Application Name: {cwd.stem}\n"
         f"       Timestamp: {datetime.now()}\n"
         f"            Host: {platform.node()}\n"
         f"       Directory: {cwd}\n"
+        f"    Last Run Log: {logger.root.handlers[0].baseFilename}\n"
         f"Operating System: {platform.system()} {platform.release()}\n"
         f"  Python Version: {platform.python_version()}\n\n"
         f"{message}"
     )
 
-    context = ssl.create_default_context()
-    with smtplib.SMTP_SSL(
-        c_config.email_smtp_server, c_config.email_port, context=context
-    ) as server:
-        server.login(c_config.email_sender_email, c_config.email_password)
-        server.sendmail(
-            c_config.email_sender_email,
-            c_config.email_receiver_email,
-            message
-        )
+    try:
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL(
+            c_config.email_smtp_server, c_config.email_port, context=context
+        ) as server:
+            server.login(c_config.email_sender_email, c_config.email_password)
+            server.sendmail(
+                c_config.email_sender_email,
+                c_config.email_receiver_email,
+                message
+            )
+    except Exception as e:
+        logger.error("Failed sending email: %s", e)
+
+    logger.info("Email notification sent to: %s", c_config.email_receiver_email)
 
 
 if __name__ == "__main__":
