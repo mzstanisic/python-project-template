@@ -1,2 +1,3 @@
 # put configuration options here
+enable_email_notifications: false     # enables email notification functionality, default = false
 log_retention_period: 30              # how many days to retain logs for, default: 30

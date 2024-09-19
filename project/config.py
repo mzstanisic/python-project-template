@@ -5,26 +5,13 @@ and environment variables from either the system or an included .env file.
 
 import logging
 import os
-from datetime import datetime
 from pathlib import Path
 
 import utils
 import yaml
 from dotenv import load_dotenv
 
-# setup the logger
 logger = logging.getLogger(__name__)
-log_path = Path(__file__).parent / "../logs/"
-log_path.mkdir(parents=True, exist_ok=True)
-
-# config the logger
-logging.basicConfig(
-    filename=log_path / datetime.now().strftime("%Y-%m-%d.log"),
-    encoding="utf-8",
-    level=logging.DEBUG,    # can change to INFO when moving to production
-    format="%(asctime)s :: %(levelname)-8s :: %(module)s.%(funcName)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
 
 
 class Config:
@@ -35,6 +22,7 @@ class Config:
 
     def __init__(
         self,
+        enable_email_notifications: bool,
         log_retention_period: int,
         email_port: int,
         email_smtp_server: str,
@@ -45,8 +33,10 @@ class Config:
         """
         Initializes the Config object with the given properties.
 
+        :param1 enable_email_notifications (bool): Wether or not to enable email notifications.
         :param log_retention_period: How many days to keeps logs for.
         """
+        self.enable_email_notifications = enable_email_notifications
         self.log_retention_period = log_retention_period or 30
         self.email_port = email_port
         self.email_smtp_server = email_smtp_server
@@ -59,6 +49,7 @@ class Config:
         Provides a string representation of the Config object.
         """
         return (
+            f"enable_email_notifications={self.enable_email_notifications}\n"
             f"log_retention_period={self.log_retention_period}\n"
             f"email_port={self.email_port}\n"
             f"email_smtp_server={self.email_smtp_server}\n"
@@ -93,6 +84,13 @@ def validate_config(config_path: Path) -> dict:
 
     # check each optional configuration option
     # and provide a default if it is empty
+    if config.get("enable_email_notifications") is None:
+        config["enable_email_notifications"] = False
+        logger.warning(
+            "Configuration field 'enable_email_notifications' in config.yml is empty. "
+            "Using default: %s",
+            config["enable_email_notifications"],
+        )
     if config.get("log_retention_period") is None:
         config["log_retention_period"] = 30
         logger.warning(
@@ -112,6 +110,7 @@ def validate_env(env_path: Path) -> dict:
     :param1 env_path (Path): The path to the environment file.
     :return (dict): A dictionary with values from the environment file.
     """
+
     env = {
         "email_port": None,
         "email_smtp_server": None,
@@ -174,6 +173,10 @@ def get_config() -> Config:
 
     :returns: A Config object that includes a data format and paths.
     """
+
+    # config the logger
+    utils.logger_setup()
+
     config_path = Path(__file__).parent / "../config.yml"
     config = validate_config(config_path)
 
@@ -183,6 +186,7 @@ def get_config() -> Config:
     env = validate_env(env_path)
 
     config = Config(
+        enable_email_notifications=config.get("enable_email_notifications"),
         log_retention_period=config.get("log_retention_period"),
         email_port=env.get("email_port"),
         email_smtp_server=env.get("email_smtp_server"),
@@ -192,6 +196,7 @@ def get_config() -> Config:
     )
 
     # clean old logs
+    log_path = Path(logger.root.handlers[0].baseFilename).parent
     utils.clean_old_logs(log_path, config.log_retention_period)
 
     return config

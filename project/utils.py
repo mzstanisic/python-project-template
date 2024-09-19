@@ -3,8 +3,8 @@ Provides utility functions to the rest of the modules in the package.
 """
 
 import logging
-import smtplib
 import platform
+import smtplib
 import ssl
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -12,6 +12,24 @@ from pathlib import Path
 import config
 
 logger = logging.getLogger(__name__)
+
+
+def logger_setup() -> None:
+    """
+    Sets up the logger.
+    """
+    # setup the logger
+    log_path = Path(__file__).parent / "../logs/"
+    log_path.mkdir(parents=True, exist_ok=True)
+
+    # config the logger
+    logging.basicConfig(
+        filename=log_path / datetime.now().strftime("%Y-%m-%d.log"),
+        encoding="utf-8",
+        level=logging.DEBUG,    # can change to INFO when moving to production
+        format="%(asctime)s :: %(levelname)-8s :: %(module)s.%(funcName)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
 
 def clean_old_logs(log_dir: Path, days: int = 30) -> None:
@@ -40,6 +58,10 @@ def send_email(c_config, message: str, exit_status: str = 'SUCCESS') -> None:
     :param2 message (str): The success or error message to send.
     :param3 exit_status (str): The exit status of the application.
     """
+
+    if not c_config.enable_email_notifications:
+        logger.info("Email notifications are disabled. Update 'config.yml' to enable.")
+        return
 
     cwd = Path.cwd()
 
@@ -77,5 +99,4 @@ def send_email(c_config, message: str, exit_status: str = 'SUCCESS') -> None:
 
 if __name__ == "__main__":
     user_config = config.get_config()
-    print("\n-----utils.py-----\nRunning send_email()...")
-    send_email(user_config, "Test Message", "TEST")
+    print("\n-----utils.py-----\n")
